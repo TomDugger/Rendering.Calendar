@@ -1313,15 +1313,15 @@ namespace Rendering.Calendar {
             int columnHeight = GetColumnHeight();
 
             ItemsBitmap?.Clear();
-            ItemsBitmap = new RenderTargetBitmap((int)size.Width - rowWidth, (int)size.Height - columnHeight, 96, 96, PixelFormats.Default);
+            ItemsBitmap = new RenderTargetBitmap(Math.Max(1, (int)size.Width - rowWidth), Math.Max(1, (int)size.Height - columnHeight), 96, 96, PixelFormats.Default);
             ItemsBrush = GetImageBrush(ItemsBitmap);
 
             RowsBitmap?.Clear();
-            RowsBitmap = new RenderTargetBitmap(rowWidth, (int)size.Height - columnHeight, 96, 96, PixelFormats.Default);
+            RowsBitmap = new RenderTargetBitmap(Math.Max(1, rowWidth), Math.Max(1, (int)size.Height - columnHeight), 96, 96, PixelFormats.Default);
             RowsBrush = GetImageBrush(RowsBitmap);
 
             ColumnsBitmap?.Clear();
-            ColumnsBitmap = new RenderTargetBitmap((int)size.Width - rowWidth, columnHeight, 96, 96, PixelFormats.Default);
+            ColumnsBitmap = new RenderTargetBitmap(Math.Max(1, (int)size.Width - rowWidth), Math.Max(1, columnHeight), 96, 96, PixelFormats.Default);
             ColumnsBrush = GetImageBrush(ColumnsBitmap);
 
             SelectedItemBitmap?.Clear();
@@ -1337,7 +1337,7 @@ namespace Rendering.Calendar {
             SelectedColumnsBrush = GetImageBrush(SelectedColumnBitmap);
 
             MouseOverBitmap?.Clear();
-            MouseOverBitmap = new RenderTargetBitmap((int)this.RenderSize.Width, (int)this.RenderSize.Height, 96, 96, PixelFormats.Default);
+            MouseOverBitmap = new RenderTargetBitmap(Math.Max(1, (int)this.RenderSize.Width), Math.Max(1, (int)this.RenderSize.Height), 96, 96, PixelFormats.Default);
             MouseOverBrush = GetImageBrush(MouseOverBitmap);
 
             this.InvalidateVisual();
