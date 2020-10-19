@@ -178,6 +178,16 @@ namespace Rendering.Calendar {
             DependencyProperty.Register("ItemTemplate", typeof(DataTemplate), typeof(MultiPresentationBox), new PropertyMetadata(default(DataTemplate)));
 
 
+        public DataTemplateSelector ItemTemplateSelector {
+            get { return (DataTemplateSelector)GetValue(ItemTemplateSelectorProperty); }
+            set { SetValue(ItemTemplateSelectorProperty, value); }
+        }
+
+        public static readonly DependencyProperty ItemTemplateSelectorProperty =
+            DependencyProperty.Register("ItemTemplateSelector", typeof(DataTemplateSelector), typeof(MultiPresentationBox), new PropertyMetadata(default(DataTemplateSelector)));
+
+
+
         public DataTemplate RowTemplate {
             get { return (DataTemplate)GetValue(RowTemplateProperty); }
             set { SetValue(RowTemplateProperty, value); }
@@ -187,6 +197,17 @@ namespace Rendering.Calendar {
             DependencyProperty.Register("RowTemplate", typeof(DataTemplate), typeof(MultiPresentationBox), new PropertyMetadata(default(DataTemplate)));
 
 
+
+        public DataTemplateSelector RowTemplateSelector {
+            get { return (DataTemplateSelector)GetValue(RowTemplateSelectorProperty); }
+            set { SetValue(RowTemplateSelectorProperty, value); }
+        }
+
+        public static readonly DependencyProperty RowTemplateSelectorProperty =
+            DependencyProperty.Register("RowTemplateSelector", typeof(DataTemplateSelector), typeof(MultiPresentationBox), new PropertyMetadata(default(DataTemplateSelector)));
+
+
+
         public DataTemplate ColumnTemplate {
             get { return (DataTemplate)GetValue(ColumnTemplateProperty); }
             set { SetValue(ColumnTemplateProperty, value); }
@@ -194,6 +215,16 @@ namespace Rendering.Calendar {
 
         public static readonly DependencyProperty ColumnTemplateProperty =
             DependencyProperty.Register("ColumnTemplate", typeof(DataTemplate), typeof(MultiPresentationBox), new PropertyMetadata(default(DataTemplate)));
+
+
+
+        public DataTemplateSelector ColumnsTemplateSelector {
+            get { return (DataTemplateSelector)GetValue(ColumnsTemplateSelectorProperty); }
+            set { SetValue(ColumnsTemplateSelectorProperty, value); }
+        }
+
+        public static readonly DependencyProperty ColumnsTemplateSelectorProperty =
+            DependencyProperty.Register("ColumnsTemplateSelector", typeof(DataTemplateSelector), typeof(MultiPresentationBox), new PropertyMetadata(default(DataTemplateSelector)));
         #endregion
 
 
@@ -1109,7 +1140,7 @@ namespace Rendering.Calendar {
 
                 foreach (var item in Items.Cast<object>().Take(con)) {
 
-                    ItemsBitmap.Render(GetVisual(GetRect(ItemPositions[item], GetItemSize(), true, true), ItemTemplate, item));
+                    ItemsBitmap.Render(GetVisual(GetRect(ItemPositions[item], GetItemSize(), true, true), ItemTemplate, item, ItemTemplateSelector));
                 }
 
                 Items.RemoveRange(0, Math.Min(Items.Count, con));
@@ -1126,7 +1157,7 @@ namespace Rendering.Calendar {
 
                 foreach (var row in Rows.Cast<object>().Take(con)) {
 
-                    RowsBitmap.Render(GetVisual(GetRect(RowPositions[row], size, false, true), RowTemplate, row));
+                    RowsBitmap.Render(GetVisual(GetRect(RowPositions[row], size, false, true), RowTemplate, row, RowTemplateSelector));
                 }
 
                 Rows.RemoveRange(0, Math.Min(Rows.Count, con));
@@ -1143,7 +1174,7 @@ namespace Rendering.Calendar {
 
                 foreach (var column in Columns.Cast<object>().Take(con)) {
 
-                    ColumnsBitmap.Render(GetVisual(GetRect(ColumnPositions[column], size, true, false), ColumnTemplate, column));
+                    ColumnsBitmap.Render(GetVisual(GetRect(ColumnPositions[column], size, true, false), ColumnTemplate, column, ColumnsTemplateSelector));
                 }
 
                 Columns.RemoveRange(0, Math.Min(Columns.Count, con));
@@ -1160,9 +1191,9 @@ namespace Rendering.Calendar {
                 foreach (var select in SItems.Cast<object>().Take(con)) {
 
                     if (ItemPositions.ContainsKey(select))
-                        SelectedItemBitmap.Render(GetVisual(GetRect(ItemPositions[select], GetItemSize(), true, true), SelectedItemTemplate, select));
+                        SelectedItemBitmap.Render(GetVisual(GetRect(ItemPositions[select], GetItemSize(), true, true), SelectedItemTemplate, select, null));
                     else if (EmptyPositions.ContainsKey(select))
-                        SelectedItemBitmap.Render(GetVisual(GetRect(EmptyPositions[select], GetItemSize(), true, true), SelectedItemTemplate, select));
+                        SelectedItemBitmap.Render(GetVisual(GetRect(EmptyPositions[select], GetItemSize(), true, true), SelectedItemTemplate, select, null));
                 }
 
                 SItems.RemoveRange(0, Math.Min(SItems.Count, con));
@@ -1177,7 +1208,7 @@ namespace Rendering.Calendar {
 
                 foreach (var select in SRows.Cast<object>().Take(con)) {
 
-                    SelectedRowBitmap.Render(GetVisual(GetRect(RowPositions[select], size, false, true), SelectedRowTemplate, select));
+                    SelectedRowBitmap.Render(GetVisual(GetRect(RowPositions[select], size, false, true), SelectedRowTemplate, select, null));
                 }
 
                 SRows.RemoveRange(0, Math.Min(SRows.Count, con));
@@ -1192,7 +1223,7 @@ namespace Rendering.Calendar {
 
                 foreach (var select in SColumns.Cast<object>().Take(con)) {
 
-                    SelectedColumnBitmap.Render(GetVisual(GetRect(ColumnPositions[select], size, true, false), SelectedColumnTemplate, select));
+                    SelectedColumnBitmap.Render(GetVisual(GetRect(ColumnPositions[select], size, true, false), SelectedColumnTemplate, select, null));
                 }
 
                 SColumns.RemoveRange(0, Math.Min(SColumns.Count, con));
@@ -1212,8 +1243,8 @@ namespace Rendering.Calendar {
             return result;
         }
 
-        private Visual GetVisual(Rect rect, DataTemplate template, object content) {
-            var presenter = new ContentPresenter { Width = rect.Width, Height = rect.Height, Content = content, ContentTemplate = template };
+        private Visual GetVisual(Rect rect, DataTemplate template, object content, DataTemplateSelector contentSelector) {
+            var presenter = new ContentPresenter { Width = rect.Width, Height = rect.Height, Content = content, ContentTemplate = template, ContentTemplateSelector = contentSelector };
 
             presenter.Arrange(rect);
 
