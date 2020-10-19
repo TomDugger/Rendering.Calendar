@@ -1581,6 +1581,9 @@ namespace Rendering.Calendar {
         private int GetRowWidth() => (int)(RowWidth * HorizontalSpanRowRendering);
 
         private int GetColumnHeight() => (int)(ColumnsHeight * VerticalSpanColumnRendering);
+
+
+        public Dictionary<object, Position> GetItemsPosition() => this.ItemPositions;
         #endregion
     }
 }
