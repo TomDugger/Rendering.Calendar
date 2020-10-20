@@ -123,6 +123,17 @@ namespace Rendering.Calendar {
             }));
 
 
+
+        public KeyValuePair<object, Position> LastSelectedItem {
+            get { return (KeyValuePair<object, Position>)GetValue(LastSelectedItemProperty); }
+            set { SetValue(LastSelectedItemProperty, value); }
+        }
+
+        public static readonly DependencyProperty LastSelectedItemProperty =
+            DependencyProperty.Register("LastSelectedItem", typeof(KeyValuePair<object, Position>), typeof(MultiPresentationBox), new PropertyMetadata(default(KeyValuePair<object, Position>)));
+
+
+
         public IEnumerable RowsSource {
             get { return (IEnumerable)GetValue(RowsSourceProperty); }
             set { SetValue(RowsSourceProperty, value); }
@@ -838,6 +849,10 @@ namespace Rendering.Calendar {
                         EmptyPositions[key] = originalPosition;
                     }
 
+                    LastSelectedItem = SelectedItems.LastOrDefault();
+
+                    SelectedEventHandler?.Invoke(SelectedRows, SelectedColumns, SelectedColumns);
+
                     RefreshVisualByCollection(SelectedItemBitmap, SelectedItems, SItems, GetItemSize(), GetItemsRenderBounds(), ref needSelectedItemsRendering);
 
                     SelectedEventHandler?.Invoke(SelectedRows, SelectedColumns, SelectedColumns);
@@ -953,6 +968,8 @@ namespace Rendering.Calendar {
                             }
                         }
 
+                        LastSelectedItem = SelectedItems.LastOrDefault();
+
                         RefreshVisualByCollection(SelectedItemBitmap, SelectedItems, SItems, GetItemSize(), GetItemsRenderBounds(), ref needSelectedItemsRendering);
 
                         SelectedEventHandler?.Invoke(SelectedRows, SelectedColumns, SelectedColumns);
@@ -973,7 +990,11 @@ namespace Rendering.Calendar {
                             EmptyPositions[key] = originalPosition;
                         }
 
+                        LastSelectedItem = SelectedItems.LastOrDefault();
+
                         RefreshVisualByCollection(SelectedItemBitmap, SelectedItems, SItems, GetItemSize(), GetItemsRenderBounds(), ref needSelectedItemsRendering);
+
+                        SelectedEventHandler?.Invoke(SelectedRows, SelectedColumns, SelectedColumns);
                     }
                 }
             }
