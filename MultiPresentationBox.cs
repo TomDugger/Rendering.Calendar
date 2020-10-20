@@ -53,8 +53,19 @@ namespace Rendering.Calendar {
         bool needSelectedColumnsRendering;
         int VerticalSpanColumnRendering = 1;
 
-        ImageBrush MouseOverBrush;
-        RenderTargetBitmap MouseOverBitmap = default(RenderTargetBitmap);
+
+        ImageBrush MouseOverItemsBrush;
+        RenderTargetBitmap MouseOverItemsBitmap = default(RenderTargetBitmap);
+
+        ImageBrush MouseOverRowsBrush;
+        RenderTargetBitmap MouseOverRowsBitmap = default(RenderTargetBitmap);
+
+        ImageBrush MouseOverColumnsBrush;
+        RenderTargetBitmap MouseOverColumnsBitmap = default(RenderTargetBitmap);
+
+        ImageBrush HighlightBrush;
+        RenderTargetBitmap HighlightBitmap = default(RenderTargetBitmap);
+
         object MouseOverElement;
 
         VisualBrush ItemsGridBrush;
@@ -642,8 +653,17 @@ namespace Rendering.Calendar {
 
             drawingContext.DrawRectangle(SelectedColumnsBrush, new Pen(), columnsRenderBounds);
 
-            // mouse over drawing
-            drawingContext.DrawRectangle(MouseOverBrush, new Pen(), new Rect(this.RenderSize));
+            // mouse over items drawing
+            drawingContext.DrawRectangle(MouseOverItemsBrush, new Pen(), itemsRenderBounds);
+
+            // mouse over rows drawing
+            drawingContext.DrawRectangle(MouseOverRowsBrush, new Pen(), rowsRenderBounds);
+
+            // mouse over columns drawing
+            drawingContext.DrawRectangle(MouseOverColumnsBrush, new Pen(), columnsRenderBounds);
+
+            // hightlight rectangle
+            drawingContext.DrawRectangle(HighlightBrush, new Pen(), new Rect(RenderSize));
         }
 
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo) {
@@ -682,8 +702,9 @@ namespace Rendering.Calendar {
             if (e.LeftButton == MouseButtonState.Pressed && AllowToHighlightRangeElements && StartPointRange != default(Point)) {
                 Rect highlightRect = new Rect(StartPointRange, position);
 
-                MouseOverBitmap?.Clear();
-                MouseOverBitmap?.Render(GetBorderVisual(highlightRect, MouseOverColor, MouseOverThickness));
+                ClearHightlightBitmap();
+
+                HighlightBitmap?.Render(GetBorderVisual(highlightRect, MouseOverColor, MouseOverThickness));
             }
             // find into rows
             else if (position.X < rowWidth && position.Y > columnHeight) {
@@ -699,11 +720,10 @@ namespace Rendering.Calendar {
                         if (MouseOverElement != row.Key) {
                             MouseOverElement = row.Key;
 
-                            MouseOverBitmap?.Clear();
                             Rect originalRect = GetRect(row.Value, size, false, true);
-                            originalRect.Offset(0, columnHeight);
+                            ClearMouseOverBitmap();
 
-                            MouseOverBitmap?.Render(GetBorderVisual(originalRect, MouseOverColor, MouseOverThickness));
+                            MouseOverRowsBitmap?.Render(GetBorderVisual(originalRect, MouseOverColor, MouseOverThickness));
                         }
 
                         break;
@@ -724,11 +744,10 @@ namespace Rendering.Calendar {
                         if (MouseOverElement != column.Key) {
                             MouseOverElement = column.Key;
 
-                            MouseOverBitmap?.Clear();
                             Rect originalRect = GetRect(column.Value, size, true, false);
-                            originalRect.Offset(rowWidth, 0);
+                            ClearMouseOverBitmap();
 
-                            MouseOverBitmap?.Render(GetBorderVisual(originalRect, MouseOverColor, MouseOverThickness));
+                            MouseOverColumnsBitmap?.Render(GetBorderVisual(originalRect, MouseOverColor, MouseOverThickness));
                         }
 
                         break;
@@ -749,21 +768,19 @@ namespace Rendering.Calendar {
                     if (MouseOverElement != item.Key) {
                         MouseOverElement = item.Key;
 
-                        MouseOverBitmap?.Clear();
                         Rect originalRect = GetRect(item.Value, size, true, true);
-                        originalRect.Offset(rowWidth, columnHeight);
+                        ClearMouseOverBitmap();
 
-                        MouseOverBitmap?.Render(GetBorderVisual(originalRect, MouseOverColor, MouseOverThickness));
+                        MouseOverItemsBitmap?.Render(GetBorderVisual(originalRect, MouseOverColor, MouseOverThickness));
                     }
                 }
                 else {
                     MouseOverElement = null;
 
-                    MouseOverBitmap?.Clear();
+                    Rect originalRect = new Rect(new Point(((int)((position.X - HorizontalOffset) / size.Width)) * size.Width, ((int)((position.Y - VerticalOffset) / size.Height)) * size.Height), size);
+                    ClearMouseOverBitmap();
 
-                    Rect originalRect = new Rect(new Point(((int)((position.X - HorizontalOffset) / size.Width)) * size.Width + rowWidth, ((int)((position.Y - VerticalOffset) / size.Height)) * size.Height + columnHeight), size);
-
-                    MouseOverBitmap?.Render(GetBorderVisual(originalRect, MouseOverColor, MouseOverThickness));
+                    MouseOverItemsBitmap?.Render(GetBorderVisual(originalRect, MouseOverColor, MouseOverThickness));
                 }
             }
         }
@@ -791,6 +808,8 @@ namespace Rendering.Calendar {
                 Point position = e.GetPosition(this);
 
                 if (AllowToHighlightRangeElements && StartPointRange != default(Point)) {
+
+                    ClearHightlightBitmap();
 
                     Rect highlightRect = new Rect(StartPointRange, position);
                     highlightRect.Offset(-rowWidth + HorizontalOffset, -columnHeight + VerticalOffset);
@@ -824,7 +843,7 @@ namespace Rendering.Calendar {
                     SelectedEventHandler?.Invoke(SelectedRows, SelectedColumns, SelectedColumns);
 
                     StartPointRange = default(Point);
-                    MouseOverBitmap?.Clear();
+                    ClearMouseOverBitmap();
                 }
                 // find into rows
                 else if (position.X < rowWidth && position.Y > columnHeight) {
@@ -964,7 +983,7 @@ namespace Rendering.Calendar {
             base.OnMouseLeave(e);
 
             MouseOverElement = null;
-            MouseOverBitmap?.Clear();
+            ClearMouseOverBitmap();
         }
 
 
@@ -1336,9 +1355,21 @@ namespace Rendering.Calendar {
             SelectedColumnBitmap = (RenderTargetBitmap)ColumnsBitmap.Clone();
             SelectedColumnsBrush = GetImageBrush(SelectedColumnBitmap);
 
-            MouseOverBitmap?.Clear();
-            MouseOverBitmap = new RenderTargetBitmap(Math.Max(1, (int)this.RenderSize.Width), Math.Max(1, (int)this.RenderSize.Height), 96, 96, PixelFormats.Default);
-            MouseOverBrush = GetImageBrush(MouseOverBitmap);
+            MouseOverItemsBitmap?.Clear();
+            MouseOverItemsBitmap = (RenderTargetBitmap)ItemsBitmap.Clone();
+            MouseOverItemsBrush = GetImageBrush(MouseOverItemsBitmap);
+
+            MouseOverRowsBitmap?.Clear();
+            MouseOverRowsBitmap = (RenderTargetBitmap)RowsBitmap.Clone();
+            MouseOverRowsBrush = GetImageBrush(MouseOverRowsBitmap);
+
+            MouseOverColumnsBitmap?.Clear();
+            MouseOverColumnsBitmap = (RenderTargetBitmap)ColumnsBitmap.Clone();
+            MouseOverColumnsBrush = GetImageBrush(MouseOverColumnsBitmap);
+
+            HighlightBitmap?.Clear();
+            HighlightBitmap = new RenderTargetBitmap((int)Math.Max(1, this.RenderSize.Width), (int)Math.Max(1, this.RenderSize.Height), 96, 96, PixelFormats.Default);
+            HighlightBrush = GetImageBrush(HighlightBitmap);
 
             this.InvalidateVisual();
 
@@ -1508,6 +1539,17 @@ namespace Rendering.Calendar {
             return this;
         }
 
+        private MultiPresentationBox ClearMouseOverBitmap() {
+            MouseOverItemsBitmap?.Clear();
+            MouseOverRowsBitmap?.Clear();
+            MouseOverColumnsBitmap?.Clear();
+            return this;
+        }
+
+        private MultiPresentationBox ClearHightlightBitmap() {
+            HighlightBitmap?.Clear();
+            return this;
+        }
 
         private void RefreshGridBrush(VisualBrush brush, Size size, Brush lineColor, Thickness thickness) {
             brush.Visual = new Border { BorderBrush = lineColor, BorderThickness = thickness, Width = size.Width, Height = size.Height };
