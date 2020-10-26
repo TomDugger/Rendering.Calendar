@@ -69,6 +69,8 @@ namespace Rendering.Calendar {
         object MouseOverElement;
 
         VisualBrush ItemsGridBrush;
+        TranslateTransform gridTranslate = new TranslateTransform();
+        TranslateTransform gridInverseTranslate = new TranslateTransform();
 
         private Point StartPointRange = default(Point);
 
@@ -99,7 +101,7 @@ namespace Rendering.Calendar {
 
             CompositionTarget.Rendering += Rendering;
 
-            ItemsGridBrush = new VisualBrush { Stretch = Stretch.None, AlignmentX = AlignmentX.Left, AlignmentY = AlignmentY.Top, TileMode = TileMode.Tile, ViewportUnits = BrushMappingMode.Absolute, Viewport = new Rect(GetItemSize()) };
+            ItemsGridBrush = new VisualBrush { Transform = gridInverseTranslate, Stretch = Stretch.None, AlignmentX = AlignmentX.Left, AlignmentY = AlignmentY.Top, TileMode = TileMode.Tile, ViewportUnits = BrushMappingMode.Absolute, Viewport = new Rect(GetItemSize()) };
         }
 
         #region Events
@@ -1169,6 +1171,12 @@ namespace Rendering.Calendar {
             RefreshRenderWithOffset(SelectedItemBitmap, -hDistance, -vDistance)
                 .RefreshSelectedVisual(SelectedItemBitmap, distanceBounds, SelectedItems, SItems, ItemPositions, GetItemSize(), ref needSelectedItemsRendering, false);
             #endregion
+
+            gridTranslate.X = HorizontalOffset;
+            gridTranslate.Y = VerticalOffset;
+
+            gridInverseTranslate.X = -HorizontalOffset;
+            gridInverseTranslate.Y = -VerticalOffset;
         }
         #endregion
 
