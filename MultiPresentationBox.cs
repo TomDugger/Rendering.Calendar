@@ -21,18 +21,24 @@ namespace Rendering.Calendar {
         ArrayList Items;
         Dictionary<object, Position> ItemPositions;
         bool needItemsRendering;
+        ContentPresenter itemPresenter;
+        ContentPresenter selectedItemPresenter;
 
         ImageBrush RowsBrush;
         RenderTargetBitmap RowsBitmap = default(RenderTargetBitmap);
         ArrayList Rows;
         Dictionary<object, Position> RowPositions;
         bool needRowsRendering;
+        ContentPresenter rowPresenter;
+        ContentPresenter selectedRowPresenter;
 
         ImageBrush ColumnsBrush;
         RenderTargetBitmap ColumnsBitmap = default(RenderTargetBitmap);
         ArrayList Columns;
         Dictionary<object, Position> ColumnPositions;
         bool needColumnsRendering;
+        ContentPresenter columnPresenter;
+        ContentPresenter selectedColumnPresenter;
 
         Dictionary<object, Position> EmptyPositions;
 
@@ -82,12 +88,18 @@ namespace Rendering.Calendar {
 
             Items = new ArrayList();
             ItemPositions = new Dictionary<object, Position>();
+            itemPresenter = new ContentPresenter { ContentTemplate = ItemTemplate, ContentTemplateSelector = ItemTemplateSelector };
+            selectedItemPresenter = new ContentPresenter { ContentTemplate = SelectedItemTemplate };
 
             Rows = new ArrayList();
             RowPositions = new Dictionary<object, Position>();
+            rowPresenter = new ContentPresenter { ContentTemplate = RowTemplate, ContentTemplateSelector = RowTemplateSelector };
+            selectedRowPresenter = new ContentPresenter { ContentTemplate = SelectedRowTemplate };
 
             Columns = new ArrayList();
             ColumnPositions = new Dictionary<object, Position>();
+            columnPresenter = new ContentPresenter { ContentTemplate = ColumnTemplate, ContentTemplateSelector = ColumnsTemplateSelector };
+            selectedColumnPresenter = new ContentPresenter { ContentTemplate = SelectedColumnTemplate };
 
             SItems = new ArrayList();
             SRows = new ArrayList();
@@ -199,7 +211,10 @@ namespace Rendering.Calendar {
         }
 
         public static readonly DependencyProperty ItemTemplateProperty =
-            DependencyProperty.Register("ItemTemplate", typeof(DataTemplate), typeof(MultiPresentationBox), new PropertyMetadata(default(DataTemplate)));
+            DependencyProperty.Register("ItemTemplate", typeof(DataTemplate), typeof(MultiPresentationBox), new PropertyMetadata(default(DataTemplate), (s, a) => {
+                if (s is MultiPresentationBox mpb)
+                    mpb.itemPresenter = new ContentPresenter { ContentTemplate = mpb.ItemTemplate, ContentTemplateSelector = mpb.ItemTemplateSelector };
+            }));
 
 
         public DataTemplateSelector ItemTemplateSelector {
@@ -208,7 +223,10 @@ namespace Rendering.Calendar {
         }
 
         public static readonly DependencyProperty ItemTemplateSelectorProperty =
-            DependencyProperty.Register("ItemTemplateSelector", typeof(DataTemplateSelector), typeof(MultiPresentationBox), new PropertyMetadata(default(DataTemplateSelector)));
+            DependencyProperty.Register("ItemTemplateSelector", typeof(DataTemplateSelector), typeof(MultiPresentationBox), new PropertyMetadata(default(DataTemplateSelector), (s, a) => {
+                if (s is MultiPresentationBox mpb)
+                    mpb.itemPresenter = new ContentPresenter { ContentTemplate = mpb.ItemTemplate, ContentTemplateSelector = mpb.ItemTemplateSelector };
+            }));
 
 
 
@@ -218,7 +236,10 @@ namespace Rendering.Calendar {
         }
 
         public static readonly DependencyProperty RowTemplateProperty =
-            DependencyProperty.Register("RowTemplate", typeof(DataTemplate), typeof(MultiPresentationBox), new PropertyMetadata(default(DataTemplate)));
+            DependencyProperty.Register("RowTemplate", typeof(DataTemplate), typeof(MultiPresentationBox), new PropertyMetadata(default(DataTemplate), (s, a) => {
+                if (s is MultiPresentationBox mpb)
+                    mpb.rowPresenter = new ContentPresenter { ContentTemplate = mpb.RowTemplate, ContentTemplateSelector = mpb.RowTemplateSelector };
+            }));
 
 
 
@@ -228,7 +249,10 @@ namespace Rendering.Calendar {
         }
 
         public static readonly DependencyProperty RowTemplateSelectorProperty =
-            DependencyProperty.Register("RowTemplateSelector", typeof(DataTemplateSelector), typeof(MultiPresentationBox), new PropertyMetadata(default(DataTemplateSelector)));
+            DependencyProperty.Register("RowTemplateSelector", typeof(DataTemplateSelector), typeof(MultiPresentationBox), new PropertyMetadata(default(DataTemplateSelector), (s, a) => {
+                if (s is MultiPresentationBox mpb)
+                    mpb.rowPresenter = new ContentPresenter { ContentTemplate = mpb.RowTemplate, ContentTemplateSelector = mpb.RowTemplateSelector };
+            }));
 
 
 
@@ -238,7 +262,10 @@ namespace Rendering.Calendar {
         }
 
         public static readonly DependencyProperty ColumnTemplateProperty =
-            DependencyProperty.Register("ColumnTemplate", typeof(DataTemplate), typeof(MultiPresentationBox), new PropertyMetadata(default(DataTemplate)));
+            DependencyProperty.Register("ColumnTemplate", typeof(DataTemplate), typeof(MultiPresentationBox), new PropertyMetadata(default(DataTemplate), (s, a) => {
+                if (s is MultiPresentationBox mpb)
+                    mpb.columnPresenter = new ContentPresenter { ContentTemplate = mpb.ColumnTemplate, ContentTemplateSelector = mpb.ColumnsTemplateSelector };
+            }));
 
 
 
@@ -248,7 +275,10 @@ namespace Rendering.Calendar {
         }
 
         public static readonly DependencyProperty ColumnsTemplateSelectorProperty =
-            DependencyProperty.Register("ColumnsTemplateSelector", typeof(DataTemplateSelector), typeof(MultiPresentationBox), new PropertyMetadata(default(DataTemplateSelector)));
+            DependencyProperty.Register("ColumnsTemplateSelector", typeof(DataTemplateSelector), typeof(MultiPresentationBox), new PropertyMetadata(default(DataTemplateSelector), (s, a) => {
+                if (s is MultiPresentationBox mpb)
+                    mpb.columnPresenter = new ContentPresenter { ContentTemplate = mpb.ColumnTemplate, ContentTemplateSelector = mpb.ColumnsTemplateSelector };
+            }));
         #endregion
 
 
@@ -536,6 +566,8 @@ namespace Rendering.Calendar {
             DependencyProperty.Register("SelectedItemTemplate", typeof(DataTemplate), typeof(MultiPresentationBox), new PropertyMetadata(null, (s, a) => {
                 var sender = (s as MultiPresentationBox);
 
+                sender.selectedItemPresenter = new ContentPresenter { ContentTemplate = sender.SelectedItemTemplate };
+
                 sender.RefreshVisualByCollection(sender.SelectedItemBitmap, sender.SelectedItems, sender.SItems, sender.GetItemSize(), sender.GetItemsRenderBounds(), ref sender.needSelectedItemsRendering);
             }));
 
@@ -549,6 +581,8 @@ namespace Rendering.Calendar {
             DependencyProperty.Register("SelectedRowTemplate", typeof(DataTemplate), typeof(MultiPresentationBox), new PropertyMetadata(null, (s, a) => {
                 var sender = (s as MultiPresentationBox);
 
+                sender.selectedRowPresenter = new ContentPresenter { ContentTemplate = sender.SelectedRowTemplate };
+
                 sender.RefreshVisualByCollection(sender.SelectedRowBitmap, sender.SelectedRows, sender.SRows, sender.GetRowSize(), sender.GetRowsRenderBounds(), ref sender.needSelectedRowsRendering);
             }));
 
@@ -561,6 +595,8 @@ namespace Rendering.Calendar {
         public static readonly DependencyProperty SelectedColumnTemplateProperty =
             DependencyProperty.Register("SelectedColumnTemplate", typeof(DataTemplate), typeof(MultiPresentationBox), new PropertyMetadata(null, (s, a) => {
                 var sender = (s as MultiPresentationBox);
+
+                sender.selectedColumnPresenter = new ContentPresenter { ContentTemplate = sender.SelectedColumnTemplate };
 
                 sender.RefreshVisualByCollection(sender.SelectedColumnBitmap, sender.SelectedColumns, sender.SColumns, sender.GetColumnSize(), sender.GetColumnRenderBounds(), ref sender.needSelectedColumnsRendering);
             }));
@@ -1188,7 +1224,7 @@ namespace Rendering.Calendar {
 
                 foreach (var item in Items.Cast<object>().Take(con)) {
 
-                    ItemsBitmap.Render(GetVisual(GetRect(ItemPositions[item], GetItemSize(), true, true), ItemTemplate, item, ItemTemplateSelector));
+                    ItemsBitmap.Render(GetVisual(itemPresenter, GetRect(ItemPositions[item], GetItemSize(), true, true), item));
                 }
 
                 Items.RemoveRange(0, Math.Min(Items.Count, con));
@@ -1205,7 +1241,7 @@ namespace Rendering.Calendar {
 
                 foreach (var row in Rows.Cast<object>().Take(con)) {
 
-                    RowsBitmap.Render(GetVisual(GetRect(RowPositions[row], size, false, true), RowTemplate, row, RowTemplateSelector));
+                    RowsBitmap.Render(GetVisual(rowPresenter, GetRect(RowPositions[row], size, false, true), row));
                 }
 
                 Rows.RemoveRange(0, Math.Min(Rows.Count, con));
@@ -1222,7 +1258,7 @@ namespace Rendering.Calendar {
 
                 foreach (var column in Columns.Cast<object>().Take(con)) {
 
-                    ColumnsBitmap.Render(GetVisual(GetRect(ColumnPositions[column], size, true, false), ColumnTemplate, column, ColumnsTemplateSelector));
+                    ColumnsBitmap.Render(GetVisual(columnPresenter, GetRect(ColumnPositions[column], size, true, false), column));
                 }
 
                 Columns.RemoveRange(0, Math.Min(Columns.Count, con));
@@ -1239,9 +1275,9 @@ namespace Rendering.Calendar {
                 foreach (var select in SItems.Cast<object>().Take(con)) {
 
                     if (ItemPositions.ContainsKey(select))
-                        SelectedItemBitmap.Render(GetVisual(GetRect(ItemPositions[select], GetItemSize(), true, true), SelectedItemTemplate, select, null));
+                        SelectedItemBitmap.Render(GetVisual(selectedItemPresenter, GetRect(ItemPositions[select], GetItemSize(), true, true), select));
                     else if (EmptyPositions.ContainsKey(select))
-                        SelectedItemBitmap.Render(GetVisual(GetRect(EmptyPositions[select], GetItemSize(), true, true), SelectedItemTemplate, select, null));
+                        SelectedItemBitmap.Render(GetVisual(selectedItemPresenter, GetRect(EmptyPositions[select], GetItemSize(), true, true), select));
                 }
 
                 SItems.RemoveRange(0, Math.Min(SItems.Count, con));
@@ -1256,7 +1292,7 @@ namespace Rendering.Calendar {
 
                 foreach (var select in SRows.Cast<object>().Take(con)) {
 
-                    SelectedRowBitmap.Render(GetVisual(GetRect(RowPositions[select], size, false, true), SelectedRowTemplate, select, null));
+                    SelectedRowBitmap.Render(GetVisual(selectedRowPresenter, GetRect(RowPositions[select], size, false, true), select));
                 }
 
                 SRows.RemoveRange(0, Math.Min(SRows.Count, con));
@@ -1271,7 +1307,7 @@ namespace Rendering.Calendar {
 
                 foreach (var select in SColumns.Cast<object>().Take(con)) {
 
-                    SelectedColumnBitmap.Render(GetVisual(GetRect(ColumnPositions[select], size, true, false), SelectedColumnTemplate, select, null));
+                    SelectedColumnBitmap.Render(GetVisual(selectedColumnPresenter, GetRect(ColumnPositions[select], size, true, false), select));
                 }
 
                 SColumns.RemoveRange(0, Math.Min(SColumns.Count, con));
@@ -1291,9 +1327,10 @@ namespace Rendering.Calendar {
             return result;
         }
 
-        private Visual GetVisual(Rect rect, DataTemplate template, object content, DataTemplateSelector contentSelector) {
-            var presenter = new ContentPresenter { Width = rect.Width, Height = rect.Height, Content = content, ContentTemplate = template, ContentTemplateSelector = contentSelector };
-
+        private Visual GetVisual(ContentPresenter presenter, Rect rect, object content) {
+            presenter.Content = content;
+            presenter.Width = rect.Width;
+            presenter.Height = rect.Height;
             presenter.Arrange(rect);
 
             return presenter;
