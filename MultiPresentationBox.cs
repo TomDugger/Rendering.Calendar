@@ -19,7 +19,6 @@ namespace Rendering.Calendar {
         ImageBrush ItemsBrush;
         RenderTargetBitmap ItemsBitmap = default(RenderTargetBitmap);
         ArrayList Items;
-        Dictionary<object, Position> ItemPositions;
         bool needItemsRendering;
         ContentPresenter itemPresenter;
         ContentPresenter selectedItemPresenter;
@@ -27,7 +26,6 @@ namespace Rendering.Calendar {
         ImageBrush RowsBrush;
         RenderTargetBitmap RowsBitmap = default(RenderTargetBitmap);
         ArrayList Rows;
-        Dictionary<object, Position> RowPositions;
         bool needRowsRendering;
         ContentPresenter rowPresenter;
         ContentPresenter selectedRowPresenter;
@@ -35,7 +33,6 @@ namespace Rendering.Calendar {
         ImageBrush ColumnsBrush;
         RenderTargetBitmap ColumnsBitmap = default(RenderTargetBitmap);
         ArrayList Columns;
-        Dictionary<object, Position> ColumnPositions;
         bool needColumnsRendering;
         ContentPresenter columnPresenter;
         ContentPresenter selectedColumnPresenter;
@@ -87,17 +84,14 @@ namespace Rendering.Calendar {
         public MultiPresentationBox() {
 
             Items = new ArrayList();
-            ItemPositions = new Dictionary<object, Position>();
             itemPresenter = new ContentPresenter { ContentTemplate = ItemTemplate, ContentTemplateSelector = ItemTemplateSelector };
             selectedItemPresenter = new ContentPresenter { ContentTemplate = SelectedItemTemplate };
 
             Rows = new ArrayList();
-            RowPositions = new Dictionary<object, Position>();
             rowPresenter = new ContentPresenter { ContentTemplate = RowTemplate, ContentTemplateSelector = RowTemplateSelector };
             selectedRowPresenter = new ContentPresenter { ContentTemplate = SelectedRowTemplate };
 
             Columns = new ArrayList();
-            ColumnPositions = new Dictionary<object, Position>();
             columnPresenter = new ContentPresenter { ContentTemplate = ColumnTemplate, ContentTemplateSelector = ColumnsTemplateSelector };
             selectedColumnPresenter = new ContentPresenter { ContentTemplate = SelectedColumnTemplate };
 
@@ -133,7 +127,7 @@ namespace Rendering.Calendar {
                 var sender = (MultiPresentationBox)s;
 
                 sender.SetItemPositions()
-                .RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null);
+                .RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemsPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null);
             }));
 
 
@@ -157,13 +151,13 @@ namespace Rendering.Calendar {
             DependencyProperty.Register("RowsSource", typeof(IEnumerable), typeof(MultiPresentationBox), new PropertyMetadata(null, (s, a) => {
                 var sender = (MultiPresentationBox)s;
 
-                sender.SetPositions(sender.RowPositions, sender.RowsSource, sender.RowPositionFunc, sender.RowGroupsFunc, out sender.HorizontalSpanRowRendering)
-                .SetOffsetPositions(sender.RowPositions, 0, sender.HorizontalSpanRowRendering - 1)
+                sender.SetPositions(sender.RowsPositions, sender.RowsSource, sender.RowPositionFunc, sender.RowGroupsFunc, out sender.HorizontalSpanRowRendering)
+                .SetOffsetPositions(sender.RowsPositions, 0, sender.HorizontalSpanRowRendering - 1)
                 .SetScrollExtent()
-                .RefreshVisuals(sender.RowsBitmap, sender.GetRowsRenderBounds(), sender.Rows, sender.RowPositions, sender.GetRowSize(), ref sender.needRowsRendering, stopRender: true)
+                .RefreshVisuals(sender.RowsBitmap, sender.GetRowsRenderBounds(), sender.Rows, sender.RowsPositions, sender.GetRowSize(), ref sender.needRowsRendering, stopRender: true)
 
                 .SetItemPositions()
-                .RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null);
+                .RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemsPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null);
             }));
 
 
@@ -176,15 +170,47 @@ namespace Rendering.Calendar {
             DependencyProperty.Register("ColumnsSource", typeof(IEnumerable), typeof(MultiPresentationBox), new PropertyMetadata(null, (s, a) => {
                 var sender = (MultiPresentationBox)s;
 
-                sender.SetPositions(sender.ColumnPositions, sender.ColumnsSource, sender.ColumnPositionFunc, sender.ColumnGroupsFunc, out sender.VerticalSpanColumnRendering)
-                .SetOffsetPositions(sender.ColumnPositions, sender.VerticalSpanColumnRendering - 1, 0)
+                sender.SetPositions(sender.ColumnsPositions, sender.ColumnsSource, sender.ColumnPositionFunc, sender.ColumnGroupsFunc, out sender.VerticalSpanColumnRendering)
+                .SetOffsetPositions(sender.ColumnsPositions, sender.VerticalSpanColumnRendering - 1, 0)
                 .SetScrollExtent()
-                .RefreshVisuals(sender.ColumnsBitmap, sender.GetColumnRenderBounds(), sender.Columns, sender.ColumnPositions, sender.GetColumnSize(), ref sender.needColumnsRendering, stopRender: true)
+                .RefreshVisuals(sender.ColumnsBitmap, sender.GetColumnRenderBounds(), sender.Columns, sender.ColumnsPositions, sender.GetColumnSize(), ref sender.needColumnsRendering, stopRender: true)
 
                 .SetItemPositions()
-                .RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null);
+                .RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemsPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null);
 
             }));
+        #endregion
+
+        #region Positions
+        public Dictionary<object, Position> ItemsPositions {
+            get { return (Dictionary<object, Position>)GetValue(ItemsPositionsProperty); }
+            set { SetValue(ItemsPositionsProperty, value); }
+        }
+
+        public static readonly DependencyProperty ItemsPositionsProperty =
+            DependencyProperty.Register("ItemsPositions", typeof(Dictionary<object, Position>), typeof(MultiPresentationBox), new PropertyMetadata(GetDeaultNewDictionary()));
+
+
+
+        public Dictionary<object, Position> RowsPositions {
+            get { return (Dictionary<object, Position>)GetValue(RowsPositionsProperty); }
+            set { SetValue(RowsPositionsProperty, value); }
+        }
+
+        public static readonly DependencyProperty RowsPositionsProperty =
+            DependencyProperty.Register("RowsPositions", typeof(Dictionary<object, Position>), typeof(MultiPresentationBox), new PropertyMetadata(GetDeaultNewDictionary()));
+
+
+
+        public Dictionary<object, Position> ColumnsPositions {
+            get { return (Dictionary<object, Position>)GetValue(ColumnsPositionsProperty); }
+            set { SetValue(ColumnsPositionsProperty, value); }
+        }
+
+        public static readonly DependencyProperty ColumnsPositionsProperty =
+            DependencyProperty.Register("ColumnsPositions", typeof(Dictionary<object, Position>), typeof(MultiPresentationBox), new PropertyMetadata(GetDeaultNewDictionary()));
+
+
         #endregion
 
 
@@ -198,7 +224,7 @@ namespace Rendering.Calendar {
             DependencyProperty.Register("ItemsFilter", typeof(Predicate<object>), typeof(MultiPresentationBox), new PropertyMetadata(null, (s, a) => {
                 var sender = (MultiPresentationBox)s;
 
-                sender.ClearAllSelecting(true).RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null)
+                sender.ClearAllSelecting(true).RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemsPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null)
                 .RefreshVisualByCollection(sender.SelectedItemBitmap, sender.SelectedItems, sender.SItems, sender.GetItemSize(), sender.GetItemsRenderBounds(), ref sender.needSelectedItemsRendering);
             }));
         #endregion
@@ -332,7 +358,7 @@ namespace Rendering.Calendar {
                 var sender = (MultiPresentationBox)s;
 
                 sender.SetItemPositions()
-                .RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null);
+                .RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemsPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null);
             }));
 
 
@@ -357,14 +383,14 @@ namespace Rendering.Calendar {
             DependencyProperty.Register("RowPositionFunc", typeof(Func<IEnumerable, object, Position, object, Position>), typeof(MultiPresentationBox), new PropertyMetadata(null, (s, a) => {
                 var sender = (MultiPresentationBox)s;
 
-                sender.SetPositions(sender.RowPositions, sender.RowsSource, sender.RowPositionFunc, sender.RowGroupsFunc, out sender.HorizontalSpanRowRendering)
-                .SetOffsetPositions(sender.RowPositions, 0, sender.HorizontalSpanRowRendering - 1)
-                .RefreshVisuals(sender.RowsBitmap, sender.GetRowsRenderBounds(), sender.Rows, sender.RowPositions, sender.GetRowSize(), ref sender.needRowsRendering, stopRender: true)
+                sender.SetPositions(sender.RowsPositions, sender.RowsSource, sender.RowPositionFunc, sender.RowGroupsFunc, out sender.HorizontalSpanRowRendering)
+                .SetOffsetPositions(sender.RowsPositions, 0, sender.HorizontalSpanRowRendering - 1)
+                .RefreshVisuals(sender.RowsBitmap, sender.GetRowsRenderBounds(), sender.Rows, sender.RowsPositions, sender.GetRowSize(), ref sender.needRowsRendering, stopRender: true)
 
                 .SetScrollExtent()
 
                 .SetItemPositions()
-                .RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null);
+                .RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemsPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null);
             }));
 
 
@@ -377,14 +403,14 @@ namespace Rendering.Calendar {
             DependencyProperty.Register("RowGroupsFunc", typeof(Func<Dictionary<object, Position>, int>), typeof(MultiPresentationBox), new PropertyMetadata(null, (s, a) => {
                 var sender = (MultiPresentationBox)s;
 
-                sender.SetPositions(sender.RowPositions, sender.RowsSource, sender.RowPositionFunc, sender.RowGroupsFunc, out sender.HorizontalSpanRowRendering)
-                .SetOffsetPositions(sender.RowPositions, 0, sender.HorizontalSpanRowRendering - 1)
+                sender.SetPositions(sender.RowsPositions, sender.RowsSource, sender.RowPositionFunc, sender.RowGroupsFunc, out sender.HorizontalSpanRowRendering)
+                .SetOffsetPositions(sender.RowsPositions, 0, sender.HorizontalSpanRowRendering - 1)
                 .RebuildRenderMap(sender.RenderSize)
-                .RefreshVisuals(sender.RowsBitmap, sender.GetRowsRenderBounds(), sender.Rows, sender.RowPositions, sender.GetRowSize(), ref sender.needRowsRendering, stopRender: true)
+                .RefreshVisuals(sender.RowsBitmap, sender.GetRowsRenderBounds(), sender.Rows, sender.RowsPositions, sender.GetRowSize(), ref sender.needRowsRendering, stopRender: true)
                 .SetScrollExtent()
 
                 .SetItemPositions()
-                .RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null);
+                .RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemsPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null);
             }));
 
 
@@ -398,15 +424,15 @@ namespace Rendering.Calendar {
             DependencyProperty.Register("ColumnPositionFunc", typeof(Func<IEnumerable, object, Position, object, Position>), typeof(MultiPresentationBox), new PropertyMetadata(null, (s, a) => {
                 var sender = (MultiPresentationBox)s;
 
-                sender.SetPositions(sender.ColumnPositions, sender.ColumnsSource, sender.ColumnPositionFunc, sender.ColumnGroupsFunc, out sender.VerticalSpanColumnRendering)
-                .SetOffsetPositions(sender.ColumnPositions, sender.VerticalSpanColumnRendering - 1, 0)
+                sender.SetPositions(sender.ColumnsPositions, sender.ColumnsSource, sender.ColumnPositionFunc, sender.ColumnGroupsFunc, out sender.VerticalSpanColumnRendering)
+                .SetOffsetPositions(sender.ColumnsPositions, sender.VerticalSpanColumnRendering - 1, 0)
                 .RebuildRenderMap(sender.RenderSize)
-                .RefreshVisuals(sender.ColumnsBitmap, sender.GetColumnRenderBounds(), sender.Columns, sender.ColumnPositions, sender.GetColumnSize(), ref sender.needColumnsRendering, stopRender: true)
+                .RefreshVisuals(sender.ColumnsBitmap, sender.GetColumnRenderBounds(), sender.Columns, sender.ColumnsPositions, sender.GetColumnSize(), ref sender.needColumnsRendering, stopRender: true)
 
                 .SetScrollExtent()
 
                 .SetItemPositions()
-                .RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null);
+                .RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemsPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null);
             }));
 
 
@@ -419,15 +445,15 @@ namespace Rendering.Calendar {
             DependencyProperty.Register("ColumnGroupsFunc", typeof(Func<Dictionary<object, Position>, int>), typeof(MultiPresentationBox), new PropertyMetadata(null, (s, a) => {
                 var sender = (MultiPresentationBox)s;
 
-                sender.SetPositions(sender.ColumnPositions, sender.ColumnsSource, sender.ColumnPositionFunc, sender.ColumnGroupsFunc, out sender.VerticalSpanColumnRendering)
-                .SetOffsetPositions(sender.ColumnPositions, sender.VerticalSpanColumnRendering - 1, 0)
+                sender.SetPositions(sender.ColumnsPositions, sender.ColumnsSource, sender.ColumnPositionFunc, sender.ColumnGroupsFunc, out sender.VerticalSpanColumnRendering)
+                .SetOffsetPositions(sender.ColumnsPositions, sender.VerticalSpanColumnRendering - 1, 0)
                 .RebuildRenderMap(sender.RenderSize)
-                .RefreshVisuals(sender.ColumnsBitmap, sender.GetColumnRenderBounds(), sender.Columns, sender.ColumnPositions, sender.GetColumnSize(), ref sender.needColumnsRendering, stopRender: true)
+                .RefreshVisuals(sender.ColumnsBitmap, sender.GetColumnRenderBounds(), sender.Columns, sender.ColumnsPositions, sender.GetColumnSize(), ref sender.needColumnsRendering, stopRender: true)
 
                 .SetScrollExtent()
 
                 .SetItemPositions()
-                .RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null);
+                .RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemsPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null);
             }));
 
         #endregion
@@ -654,9 +680,9 @@ namespace Rendering.Calendar {
             var sender = (MultiPresentationBox)s;
 
             sender.SetScrollExtent()
-                .RefreshVisuals(sender.RowsBitmap, sender.GetRowsRenderBounds(), sender.Rows, sender.RowPositions, sender.GetRowSize(), ref sender.needRowsRendering, stopRender: true)
-                .RefreshVisuals(sender.ColumnsBitmap, sender.GetColumnRenderBounds(), sender.Columns, sender.ColumnPositions, sender.GetColumnSize(), ref sender.needColumnsRendering, stopRender: true)
-                .RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null)
+                .RefreshVisuals(sender.RowsBitmap, sender.GetRowsRenderBounds(), sender.Rows, sender.RowsPositions, sender.GetRowSize(), ref sender.needRowsRendering, stopRender: true)
+                .RefreshVisuals(sender.ColumnsBitmap, sender.GetColumnRenderBounds(), sender.Columns, sender.ColumnsPositions, sender.GetColumnSize(), ref sender.needColumnsRendering, stopRender: true)
+                .RefreshVisuals(sender.ItemsBitmap, sender.GetItemsRenderBounds(), sender.Items, sender.ItemsPositions, sender.GetItemSize(), ref sender.needItemsRendering, stopRender: true, filter: sender.ItemsFilter != null)
 
                 .RefreshVisualByCollection(sender.SelectedItemBitmap, sender.SelectedItems, sender.SItems, sender.GetItemSize(), sender.GetItemsRenderBounds(), ref sender.needSelectedItemsRendering)
                 .RefreshVisualByCollection(sender.SelectedRowBitmap, sender.SelectedRows, sender.SRows, sender.GetRowSize(), sender.GetRowsRenderBounds(), ref sender.needSelectedRowsRendering)
@@ -719,9 +745,9 @@ namespace Rendering.Calendar {
 
             RebuildRenderMap(sizeInfo.NewSize).SetScrollExtent();
 
-            RefreshVisuals(ItemsBitmap, GetItemsRenderBounds(), Items, ItemPositions, GetItemSize(), ref needItemsRendering, stopRender: true, filter: ItemsFilter != null)
-            .RefreshVisuals(RowsBitmap, GetRowsRenderBounds(), Rows, RowPositions, GetRowSize(), ref needRowsRendering, stopRender: true)
-            .RefreshVisuals(ColumnsBitmap, GetColumnRenderBounds(), Columns, ColumnPositions, GetColumnSize(), ref needColumnsRendering, stopRender: true)
+            RefreshVisuals(ItemsBitmap, GetItemsRenderBounds(), Items, ItemsPositions, GetItemSize(), ref needItemsRendering, stopRender: true, filter: ItemsFilter != null)
+            .RefreshVisuals(RowsBitmap, GetRowsRenderBounds(), Rows, RowsPositions, GetRowSize(), ref needRowsRendering, stopRender: true)
+            .RefreshVisuals(ColumnsBitmap, GetColumnRenderBounds(), Columns, ColumnsPositions, GetColumnSize(), ref needColumnsRendering, stopRender: true)
 
             .RefreshVisualByCollection(SelectedItemBitmap, SelectedItems, SItems, GetItemSize(), GetItemsRenderBounds(), ref needSelectedItemsRendering)
             .RefreshVisualByCollection(SelectedRowBitmap, SelectedRows, SRows, GetRowSize(), GetRowsRenderBounds(), ref needSelectedRowsRendering)
@@ -761,7 +787,7 @@ namespace Rendering.Calendar {
                 position = new Point(position.X, position.Y - columnHeight + VerticalOffset);
                 Size size = GetRowSize();
 
-                foreach (var row in RowPositions) {
+                foreach (var row in RowsPositions) {
                     Rect rect = GetRect(row.Value, size, false, false);
 
                     if (rect.Contains(position)) {
@@ -785,7 +811,7 @@ namespace Rendering.Calendar {
                 position = new Point(position.X - rowWidth + HorizontalOffset, position.Y);
                 Size size = GetColumnSize();
 
-                foreach (var column in ColumnPositions) {
+                foreach (var column in ColumnsPositions) {
                     Rect rect = GetRect(column.Value, size, false, false);
 
                     if (rect.Contains(position)) {
@@ -810,7 +836,7 @@ namespace Rendering.Calendar {
 
                 Size size = GetItemSize();
 
-                var item = ItemPositions.FirstOrDefault(x => GetRect(x.Value, size, false, false).Contains(position));
+                var item = ItemsPositions.FirstOrDefault(x => GetRect(x.Value, size, false, false).Contains(position));
 
                 if (item.Key != null && ItemsFilter?.Invoke(item.Key) != false) {
 
@@ -826,7 +852,10 @@ namespace Rendering.Calendar {
                 else {
                     MouseOverElement = null;
 
-                    Rect originalRect = new Rect(new Point(((int)((position.X - HorizontalOffset) / size.Width)) * size.Width, ((int)((position.Y - VerticalOffset) / size.Height)) * size.Height), size);
+                    Rect originalRect = new Rect(new Point(
+                        ((int)((position.X - HorizontalOffset) / size.Width)) * size.Width - HorizontalOffset % size.Width, 
+                        ((int)((position.Y - VerticalOffset) / size.Height)) * size.Height + VerticalOffset % size.Height), 
+                        size);
                     ClearMouseOverBitmap();
 
                     MouseOverItemsBitmap?.Render(GetBorderVisual(originalRect, MouseOverColor, MouseOverThickness));
@@ -864,7 +893,7 @@ namespace Rendering.Calendar {
                     highlightRect.Offset(-rowWidth + HorizontalOffset, -columnHeight + VerticalOffset);
 
                     // find element into the range
-                    var selectedItems = ItemPositions.Where(x => ItemsFilter?.Invoke(x.Key) != false && GetRect(x.Value, GetItemSize(), false, false).IntersectsWith(highlightRect));
+                    var selectedItems = ItemsPositions.Where(x => ItemsFilter?.Invoke(x.Key) != false && GetRect(x.Value, GetItemSize(), false, false).IntersectsWith(highlightRect));
 
                     SelectedItems.Clear();
                     EmptyPositions.Clear();
@@ -904,7 +933,7 @@ namespace Rendering.Calendar {
                     position = new Point(position.X, position.Y - columnHeight + VerticalOffset);
                     Size size = GetRowSize();
 
-                    foreach (var row in RowPositions) {
+                    foreach (var row in RowsPositions) {
                         Rect rect = GetRect(row.Value, size, false, false);
 
                         if (rect.Contains(position)) {
@@ -923,7 +952,7 @@ namespace Rendering.Calendar {
                                 SelectedRows.Add(row);
 
                                 if (SelectingRowWithItems) {
-                                    foreach (var item in ItemPositions.Where(x => ItemsFilter?.Invoke(x.Key) != false && row.Value.IsValidateRowSpan(x.Value.Row, x.Value.FullRow)))
+                                    foreach (var item in ItemsPositions.Where(x => ItemsFilter?.Invoke(x.Key) != false && row.Value.IsValidateRowSpan(x.Value.Row, x.Value.FullRow)))
                                         SelectedItems.Add(item);
 
                                     RefreshVisualByCollection(SelectedItemBitmap, SelectedItems, SItems, GetItemSize(), GetItemsRenderBounds(), ref needSelectedItemsRendering);
@@ -945,7 +974,7 @@ namespace Rendering.Calendar {
                     position = new Point(position.X - rowWidth + HorizontalOffset, position.Y);
                     Size size = GetColumnSize();
 
-                    foreach (var column in ColumnPositions) {
+                    foreach (var column in ColumnsPositions) {
                         Rect rect = GetRect(column.Value, size, false, false);
 
                         if (rect.Contains(position)) {
@@ -964,7 +993,7 @@ namespace Rendering.Calendar {
                                 SelectedColumns.Add(column);
 
                                 if (SelectingColumnWithItems) {
-                                    foreach (var item in ItemPositions.Where(x => ItemsFilter?.Invoke(x.Key) != false && column.Value.IsValidateColumnSpan(x.Value.Column, x.Value.FullColumn)))
+                                    foreach (var item in ItemsPositions.Where(x => ItemsFilter?.Invoke(x.Key) != false && column.Value.IsValidateColumnSpan(x.Value.Column, x.Value.FullColumn)))
                                         SelectedItems.Add(item);
 
                                     RefreshVisualByCollection(SelectedItemBitmap, SelectedItems, SItems, GetItemSize(), GetItemsRenderBounds(), ref needSelectedItemsRendering);
@@ -984,7 +1013,7 @@ namespace Rendering.Calendar {
 
                     position = new Point(position.X - rowWidth + HorizontalOffset, position.Y - columnHeight + VerticalOffset);
 
-                    var selectedItem = ItemPositions.FirstOrDefault(x => GetRect(x.Value, GetItemSize(), false, false).Contains(position));
+                    var selectedItem = ItemsPositions.FirstOrDefault(x => GetRect(x.Value, GetItemSize(), false, false).Contains(position));
 
                     Size size = GetItemSize();
 
@@ -995,10 +1024,10 @@ namespace Rendering.Calendar {
                             SelectedItems.Add(selectedItem);
 
                             if (SelectingItemWithRowsAndColumns) {
-                                foreach (var row in RowPositions.Where(x => selectedItem.Value.IsValidateRowSpan(x.Value.Row, x.Value.FullRow)))
+                                foreach (var row in RowsPositions.Where(x => selectedItem.Value.IsValidateRowSpan(x.Value.Row, x.Value.FullRow)))
                                     SelectedRows.Add(row);
 
-                                foreach (var column in ColumnPositions.Where(x => selectedItem.Value.IsValidateColumnSpan(x.Value.Column, x.Value.FullColumn)))
+                                foreach (var column in ColumnsPositions.Where(x => selectedItem.Value.IsValidateColumnSpan(x.Value.Column, x.Value.FullColumn)))
                                     SelectedColumns.Add(column);
 
                                 RefreshVisualByCollection(SelectedRowBitmap, SelectedRows, SRows, GetRowSize(), GetRowsRenderBounds(), ref needSelectedRowsRendering)
@@ -1165,10 +1194,10 @@ namespace Rendering.Calendar {
                     distanceBounds = new Rect(rowBounds.Left, rowBounds.Top + distance, rowBounds.Width, Math.Abs(distance));
 
                 RefreshRenderWithOffset(RowsBitmap, 0, -distance)
-                    .RefreshVisuals(RowsBitmap, distanceBounds, Rows, RowPositions, GetRowSize(), ref needRowsRendering, false);
+                    .RefreshVisuals(RowsBitmap, distanceBounds, Rows, RowsPositions, GetRowSize(), ref needRowsRendering, false);
 
                 RefreshRenderWithOffset(SelectedRowBitmap, 0, -distance)
-                    .RefreshSelectedVisual(SelectedRowBitmap, distanceBounds, SelectedRows, SRows, RowPositions, GetRowSize(), ref needSelectedRowsRendering, false);
+                    .RefreshSelectedVisual(SelectedRowBitmap, distanceBounds, SelectedRows, SRows, RowsPositions, GetRowSize(), ref needSelectedRowsRendering, false);
 
             }
             else if (horizontal == true) {
@@ -1182,10 +1211,10 @@ namespace Rendering.Calendar {
                     distanceBounds = new Rect(columnBounds.Left + distance, columnBounds.Top, Math.Abs(distance), columnBounds.Height);
 
                 RefreshRenderWithOffset(ColumnsBitmap, -distance, 0)
-                    .RefreshVisuals(ColumnsBitmap, distanceBounds, Columns, ColumnPositions, GetColumnSize(), ref needColumnsRendering, false);
+                    .RefreshVisuals(ColumnsBitmap, distanceBounds, Columns, ColumnsPositions, GetColumnSize(), ref needColumnsRendering, false);
 
                 RefreshRenderWithOffset(SelectedColumnBitmap, -distance, 0)
-                    .RefreshSelectedVisual(SelectedColumnBitmap, distanceBounds, SelectedColumns, SColumns, ColumnPositions, GetColumnSize(), ref needSelectedColumnsRendering, false);
+                    .RefreshSelectedVisual(SelectedColumnBitmap, distanceBounds, SelectedColumns, SColumns, ColumnsPositions, GetColumnSize(), ref needSelectedColumnsRendering, false);
             }
 
             Rect itemsBounds = GetItemsRenderBounds();
@@ -1202,10 +1231,10 @@ namespace Rendering.Calendar {
                 distanceBounds = new Rect(itemsBounds.Left, itemsBounds.Top + vDistance, itemsBounds.Width, Math.Abs(vDistance));
 
             RefreshRenderWithOffset(ItemsBitmap, -hDistance, -vDistance)
-                .RefreshVisuals(ItemsBitmap, distanceBounds, Items, ItemPositions, GetItemSize(), ref needItemsRendering, false, filter: ItemsFilter != null);
+                .RefreshVisuals(ItemsBitmap, distanceBounds, Items, ItemsPositions, GetItemSize(), ref needItemsRendering, false, filter: ItemsFilter != null);
 
             RefreshRenderWithOffset(SelectedItemBitmap, -hDistance, -vDistance)
-                .RefreshSelectedVisual(SelectedItemBitmap, distanceBounds, SelectedItems, SItems, ItemPositions, GetItemSize(), ref needSelectedItemsRendering, false);
+                .RefreshSelectedVisual(SelectedItemBitmap, distanceBounds, SelectedItems, SItems, ItemsPositions, GetItemSize(), ref needSelectedItemsRendering, false);
             #endregion
 
             gridTranslate.X = HorizontalOffset;
@@ -1224,7 +1253,7 @@ namespace Rendering.Calendar {
 
                 foreach (var item in Items.Cast<object>().Take(con)) {
 
-                    ItemsBitmap.Render(GetVisual(itemPresenter, GetRect(ItemPositions[item], GetItemSize(), true, true), item));
+                    ItemsBitmap.Render(GetVisual(itemPresenter, GetRect(ItemsPositions[item], GetItemSize(), true, true), item));
                 }
 
                 Items.RemoveRange(0, Math.Min(Items.Count, con));
@@ -1241,7 +1270,7 @@ namespace Rendering.Calendar {
 
                 foreach (var row in Rows.Cast<object>().Take(con)) {
 
-                    RowsBitmap.Render(GetVisual(rowPresenter, GetRect(RowPositions[row], size, false, true), row));
+                    RowsBitmap.Render(GetVisual(rowPresenter, GetRect(RowsPositions[row], size, false, true), row));
                 }
 
                 Rows.RemoveRange(0, Math.Min(Rows.Count, con));
@@ -1258,7 +1287,7 @@ namespace Rendering.Calendar {
 
                 foreach (var column in Columns.Cast<object>().Take(con)) {
 
-                    ColumnsBitmap.Render(GetVisual(columnPresenter, GetRect(ColumnPositions[column], size, true, false), column));
+                    ColumnsBitmap.Render(GetVisual(columnPresenter, GetRect(ColumnsPositions[column], size, true, false), column));
                 }
 
                 Columns.RemoveRange(0, Math.Min(Columns.Count, con));
@@ -1274,8 +1303,8 @@ namespace Rendering.Calendar {
 
                 foreach (var select in SItems.Cast<object>().Take(con)) {
 
-                    if (ItemPositions.ContainsKey(select))
-                        SelectedItemBitmap.Render(GetVisual(selectedItemPresenter, GetRect(ItemPositions[select], GetItemSize(), true, true), select));
+                    if (ItemsPositions.ContainsKey(select))
+                        SelectedItemBitmap.Render(GetVisual(selectedItemPresenter, GetRect(ItemsPositions[select], GetItemSize(), true, true), select));
                     else if (EmptyPositions.ContainsKey(select))
                         SelectedItemBitmap.Render(GetVisual(selectedItemPresenter, GetRect(EmptyPositions[select], GetItemSize(), true, true), select));
                 }
@@ -1292,7 +1321,7 @@ namespace Rendering.Calendar {
 
                 foreach (var select in SRows.Cast<object>().Take(con)) {
 
-                    SelectedRowBitmap.Render(GetVisual(selectedRowPresenter, GetRect(RowPositions[select], size, false, true), select));
+                    SelectedRowBitmap.Render(GetVisual(selectedRowPresenter, GetRect(RowsPositions[select], size, false, true), select));
                 }
 
                 SRows.RemoveRange(0, Math.Min(SRows.Count, con));
@@ -1307,7 +1336,7 @@ namespace Rendering.Calendar {
 
                 foreach (var select in SColumns.Cast<object>().Take(con)) {
 
-                    SelectedColumnBitmap.Render(GetVisual(selectedColumnPresenter, GetRect(ColumnPositions[select], size, true, false), select));
+                    SelectedColumnBitmap.Render(GetVisual(selectedColumnPresenter, GetRect(ColumnsPositions[select], size, true, false), select));
                 }
 
                 SColumns.RemoveRange(0, Math.Min(SColumns.Count, con));
@@ -1331,8 +1360,17 @@ namespace Rendering.Calendar {
             presenter.Content = content;
             presenter.Width = rect.Width;
             presenter.Height = rect.Height;
-            presenter.Arrange(rect);
 
+            var tc = presenter.ContentTemplate;
+            presenter.ContentTemplate = null;
+            presenter.ContentTemplate = tc;
+
+            var lc = presenter.ContentTemplateSelector;
+            presenter.ContentTemplateSelector = null;
+            presenter.ContentTemplateSelector = lc;
+
+            presenter.Arrange(rect);
+            
             return presenter;
         }
 
@@ -1351,10 +1389,10 @@ namespace Rendering.Calendar {
 
         private MultiPresentationBox SetScrollExtent() {
 
-            if (RowPositions.Any() && ColumnPositions.Any()) {
+            if (RowsPositions.Any() && ColumnsPositions.Any()) {
 
-                var rq = RowPositions.Max(x => x.Value.FullRow);
-                var cq = ColumnPositions.Max(x => x.Value.FullColumn);
+                var rq = RowsPositions.Max(x => x.Value.FullRow);
+                var cq = ColumnsPositions.Max(x => x.Value.FullColumn);
 
                 Size size = GetItemSize();
 
@@ -1514,20 +1552,20 @@ namespace Rendering.Calendar {
         }
 
         private MultiPresentationBox SetItemPositions() {
-            ItemPositions.Clear();
+            ItemsPositions.Clear();
 
-            if (ItemsSource == null || ItemPositionFunc == null || !RowPositions.Any() || !ColumnPositions.Any()) return this;
+            if (ItemsSource == null || ItemPositionFunc == null || !RowsPositions.Any() || !ColumnsPositions.Any()) return this;
 
             int[,] placement = null;
 
             if (ItemPlacingFunc != null)
-                placement = new int[RowPositions.Max(x => x.Value.FullRow) + 1, ColumnPositions.Max(x => x.Value.FullColumn) + 1];
+                placement = new int[RowsPositions.Max(x => x.Value.FullRow) + 1, ColumnsPositions.Max(x => x.Value.FullColumn) + 1];
 
             foreach (var item in ItemsSource) {
-                if (ItemPositionFunc(RowPositions, ColumnPositions, item) is Position p) {
+                if (ItemPositionFunc(RowsPositions, ColumnsPositions, item) is Position p) {
 
-                    Dictionary<object, int> rowSpans = RowPositions.ToDictionary(x => x.Key, x => x.Value.RowsSpan);
-                    var columnSpans = ColumnPositions.ToDictionary(x => x.Key, x => x.Value.ColumnsSpan);
+                    Dictionary<object, int> rowSpans = RowsPositions.ToDictionary(x => x.Key, x => x.Value.RowsSpan);
+                    var columnSpans = ColumnsPositions.ToDictionary(x => x.Key, x => x.Value.ColumnsSpan);
 
                     if (ItemPlacingFunc != null) {
                         if (ItemPlacingFunc(placement, rowSpans, columnSpans, item, p) is Position ps) {
@@ -1536,12 +1574,12 @@ namespace Rendering.Calendar {
                                 for (int j = ps.Column; j < ps.FullColumn; j++)
                                     placement[i, j]++;
 
-                            ItemPositions[item] = ps;
+                            ItemsPositions[item] = ps;
 
                         }
                     }
                     else
-                        ItemPositions[item] = p;
+                        ItemsPositions[item] = p;
                 }
             }
 
@@ -1647,12 +1685,12 @@ namespace Rendering.Calendar {
 
             Position bounds = new Position(VerticalOffset / ItemSize.Width, HorizontalOffset / ItemSize.Height, 1 + ItemsBitmap.Width / ItemSize.Width, 1 + ItemsBitmap.Height / ItemSize.Height);
 
-            return ItemPositions.Where(x => ItemsFilter?.Invoke(x.Key) != false).OrderBy(x => x.Value.Row + x.Value.Column).First();
+            return ItemsPositions.Where(x => ItemsFilter?.Invoke(x.Key) != false).OrderBy(x => x.Value.Row + x.Value.Column).First();
         }
 
         private KeyValuePair<object, Position> GetNextSelectPosition(KeyValuePair<object, Position> lastPosition, Predicate<KeyValuePair<object, Position>> finder) {
 
-            var nextElement = ItemPositions.Where(x => ItemsFilter?.Invoke(x.Key) != false).OrderBy(x => x.Value.Row).ThenBy(x => x.Value.Column).FirstOrDefault(x => finder(x));
+            var nextElement = ItemsPositions.Where(x => ItemsFilter?.Invoke(x.Key) != false).OrderBy(x => x.Value.Row).ThenBy(x => x.Value.Column).FirstOrDefault(x => finder(x));
 
             if (nextElement.Key != null)
                 return nextElement;
@@ -1662,7 +1700,7 @@ namespace Rendering.Calendar {
 
         private KeyValuePair<object, Position> GetLastSelectPosition(KeyValuePair<object, Position> lastPosition, Predicate<KeyValuePair<object, Position>> finder) {
 
-            var nextElement = ItemPositions.Where(x => ItemsFilter?.Invoke(x.Key) != false).OrderBy(x => x.Value.Row).ThenBy(x => x.Value.Column).LastOrDefault(x => finder(x));
+            var nextElement = ItemsPositions.Where(x => ItemsFilter?.Invoke(x.Key) != false).OrderBy(x => x.Value.Row).ThenBy(x => x.Value.Column).LastOrDefault(x => finder(x));
 
             if (nextElement.Key != null)
                 return nextElement;
@@ -1691,7 +1729,9 @@ namespace Rendering.Calendar {
         private int GetColumnHeight() => (int)(ColumnsHeight * VerticalSpanColumnRendering);
 
 
-        public Dictionary<object, Position> GetItemsPosition() => this.ItemPositions;
+        private static Dictionary<object, Position> GetDeaultNewDictionary() => new Dictionary<object, Position>();
+
+        public Dictionary<object, Position> GetItemsPosition() => this.ItemsPositions;
         #endregion
     }
 }
