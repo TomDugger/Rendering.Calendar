@@ -854,7 +854,7 @@ namespace Rendering.Calendar {
 
                     Rect originalRect = new Rect(new Point(
                         ((int)((position.X - HorizontalOffset) / size.Width)) * size.Width - HorizontalOffset % size.Width, 
-                        ((int)((position.Y - VerticalOffset) / size.Height)) * size.Height + VerticalOffset % size.Height), 
+                        ((int)((position.Y - VerticalOffset) / size.Height)) * size.Height - VerticalOffset % size.Height), 
                         size);
                     ClearMouseOverBitmap();
 
@@ -867,6 +867,8 @@ namespace Rendering.Calendar {
             base.OnMouseMove(e);
 
             if (e.ChangedButton == MouseButton.Left) {
+
+                LastSelectedItem = default(KeyValuePair<object, Position>);
 
                 int rowWidth = GetRowWidth();
                 int columnHeight = GetColumnHeight();
@@ -1175,6 +1177,8 @@ namespace Rendering.Calendar {
 
 
         protected override void OnScroll(double newValue, double oldValue, bool? horizontal = null) {
+
+            ClearMouseOverBitmap();
 
             if (horizontal == null) return;
 
